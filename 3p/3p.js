@@ -66,10 +66,23 @@ export function run(id, win, data) {
  * @param {function()=} opt_cb
  */
 export function writeScript(win, url, opt_cb) {
-  win.document.write(
-    // eslint-disable-next-line no-useless-concat
-    '<' + 'script src="' + encodeURI(url) + '"><' + '/script>'
-  );
+  if (self.trustedTypes && self.trustedTypes.createPolicy) {
+    const policy = self.trustedTypes.createPolicy(
+      '3p#writeScript',
+      {
+        createHTML: function (url) {
+          return '<' + 'script src="' + encodeURI(url) + '"><' + '/script>';
+        },
+      }
+    );
+    // @ts-ignore
+    win.document.write(policy.createHTML(url));
+  } else {
+    win.document.write(
+      // eslint-disable-next-line no-useless-concat
+      '<' + 'script src="' + encodeURI(url) + '"><' + '/script>'
+    );
+  }
   if (opt_cb) {
     executeAfterWriteScript(win, opt_cb);
   }
